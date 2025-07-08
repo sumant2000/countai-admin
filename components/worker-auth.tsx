@@ -7,10 +7,20 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { WorkerAuthService } from "@/lib/services"
-import { User, LogOut } from "lucide-react"
+import { WorkerAutoFill } from "@/lib/worker-autofill"
+import { User, LogOut, Shuffle } from "lucide-react"
 
 interface WorkerAuthProps {
   onAuthChange: (authenticated: boolean) => void
+}
+
+// Auto-fill data for demo purposes - now using the utility
+const generateWorkerId = (): string => {
+  return WorkerAutoFill.generateWorkerId()
+}
+
+const getRandomWorkerName = (): string => {
+  return WorkerAutoFill.getRandomWorkerName()
 }
 
 export function WorkerAuth({ onAuthChange }: WorkerAuthProps) {
@@ -19,7 +29,9 @@ export function WorkerAuth({ onAuthChange }: WorkerAuthProps) {
   const [workerName, setWorkerName] = useState("")
   const [currentWorker, setCurrentWorker] = useState<{ id: string; name?: string } | null>(null)
 
+  // Auto-fill on component mount
   useEffect(() => {
+    // Check if user is already authenticated
     const id = WorkerAuthService.getWorkerId()
     const name = WorkerAuthService.getWorkerName()
     
@@ -27,10 +39,23 @@ export function WorkerAuth({ onAuthChange }: WorkerAuthProps) {
       setCurrentWorker({ id, name: name || undefined })
       onAuthChange(true)
     } else {
+      // Auto-fill form with demo data
+      setWorkerId(generateWorkerId())
+      setWorkerName(getRandomWorkerName())
       setIsOpen(true)
       onAuthChange(false)
     }
   }, [onAuthChange])
+
+  const handleAutoFill = () => {
+    setWorkerId(generateWorkerId())
+    setWorkerName(getRandomWorkerName())
+  }
+
+  const handleQuickLogin = (preset: { id: string; name: string }) => {
+    setWorkerId(preset.id)
+    setWorkerName(preset.name)
+  }
 
   const handleLogin = () => {
     if (workerId.trim()) {
@@ -51,6 +76,9 @@ export function WorkerAuth({ onAuthChange }: WorkerAuthProps) {
   }
 
   const openLoginDialog = () => {
+    // Auto-fill form when opening dialog
+    setWorkerId(generateWorkerId())
+    setWorkerName(getRandomWorkerName())
     setIsOpen(true)
   }
 
@@ -75,27 +103,40 @@ export function WorkerAuth({ onAuthChange }: WorkerAuthProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e: any) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Worker Identification</DialogTitle>
           <DialogDescription>
-            Please enter your worker ID to access the admin dashboard.
+            Your worker credentials have been auto-filled for convenience. You can modify them or generate new ones.
           </DialogDescription>
         </DialogHeader>
         <Card>
           <CardContent className="p-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="worker-id">Worker ID *</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="worker-id">Worker ID *</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAutoFill}
+                  className="h-6 px-2 text-xs"
+                >
+                  <Shuffle className="h-3 w-3 mr-1" />
+                  Generate New
+                </Button>
+              </div>
               <Input
                 id="worker-id"
                 placeholder="Enter your worker ID"
                 value={workerId}
                 onChange={(e) => setWorkerId(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                className="font-mono"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="worker-name">Worker Name (Optional)</Label>
+              <Label htmlFor="worker-name">Worker Name</Label>
               <Input
                 id="worker-name"
                 placeholder="Enter your name"
@@ -104,13 +145,38 @@ export function WorkerAuth({ onAuthChange }: WorkerAuthProps) {
                 onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
               />
             </div>
-            <Button 
-              onClick={handleLogin} 
-              className="w-full"
-              disabled={!workerId.trim()}
-            >
-              Continue
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleLogin} 
+                className="flex-1"
+                disabled={!workerId.trim()}
+              >
+                Continue as {workerName || workerId}
+              </Button>
+            </div>
+            
+            {/* Quick Login Presets */}
+            <div className="border-t pt-4">
+              <Label className="text-sm text-muted-foreground mb-2 block">Quick Login Options:</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {WorkerAutoFill.getPresetDemoUsers().slice(0, 4).map((preset) => (
+                  <Button
+                    key={preset.id}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickLogin(preset)}
+                    className="h-8 text-xs"
+                  >
+                    {preset.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="text-xs text-muted-foreground text-center">
+              💡 Tip: Worker credentials are auto-generated for demo purposes. Use quick login or generate new credentials.
+            </div>
           </CardContent>
         </Card>
       </DialogContent>
