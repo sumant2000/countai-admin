@@ -52,11 +52,6 @@ export function WorkerAuth({ onAuthChange }: WorkerAuthProps) {
     setWorkerName(getRandomWorkerName())
   }
 
-  const handleQuickLogin = (preset: { id: string; name: string }) => {
-    setWorkerId(preset.id)
-    setWorkerName(preset.name)
-  }
-
   const handleLogin = () => {
     if (workerId.trim()) {
       WorkerAuthService.setWorker(workerId.trim(), workerName.trim() || undefined)
@@ -155,27 +150,8 @@ export function WorkerAuth({ onAuthChange }: WorkerAuthProps) {
               </Button>
             </div>
             
-            {/* Quick Login Presets */}
-            <div className="border-t pt-4">
-              <Label className="text-sm text-muted-foreground mb-2 block">Quick Login Options:</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {WorkerAutoFill.getPresetDemoUsers().slice(0, 4).map((preset) => (
-                  <Button
-                    key={preset.id}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickLogin(preset)}
-                    className="h-8 text-xs"
-                  >
-                    {preset.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            
             <div className="text-xs text-muted-foreground text-center">
-              💡 Tip: Worker credentials are auto-generated for demo purposes. Use quick login or generate new credentials.
+              💡 Tip: Worker credentials are auto-generated for demo purposes. Click "Generate New" for different credentials.
             </div>
           </CardContent>
         </Card>
